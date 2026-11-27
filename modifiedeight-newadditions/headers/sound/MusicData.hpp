@@ -29,6 +29,10 @@ extern "C" {
 	extern const unsigned char music_subwoofer_lullaby_end[];
 	extern const unsigned char music_equinoxe_start[];
 	extern const unsigned char music_equinoxe_end[];
+	extern const unsigned char music_beginning_start[];
+	extern const unsigned char music_beginning_end[];
+	extern const unsigned char music_flake_start[];
+	extern const unsigned char music_flake_end[];
 }
 const MusicTrack& getMenuTrack(int index);
 int getMenuTrackCount();

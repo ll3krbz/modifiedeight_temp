@@ -41,7 +41,9 @@ void JukeboxManager::loadTracks() {
 		{"Oxygene", music_oxygene_start, music_oxygene_end},
 		{"Equinoxe", music_equinoxe_start, music_equinoxe_end},
 		{"Door", music_door_start, music_door_end},
-		{"Moog City 2", music_moog_city_2_start, music_moog_city_2_end}
+		{"Moog City 2", music_moog_city_2_start, music_moog_city_2_end},
+		{"Beginning", music_beginning_start, music_beginning_end},
+		{"Flake", music_flake_start, music_flake_end}
 	};
 	for (size_t i = 0; i < sizeof(embedded) / sizeof(embedded[0]); ++i) {
 		CustomMusicTrack t;

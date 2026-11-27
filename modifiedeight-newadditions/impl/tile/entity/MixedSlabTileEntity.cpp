@@ -1,5 +1,6 @@
 #include <tile/entity/MixedSlabTileEntity.hpp>
 #include <nbt/CompoundTag.hpp>
+#include <level/Level.hpp>
 
 MixedSlabTileEntity::MixedSlabTileEntity()
 	: TileEntity(5) {
@@ -48,4 +49,7 @@ bool_t MixedSlabTileEntity::save(CompoundTag* tag) {
 
 void MixedSlabTileEntity::onUpdatePacket(CompoundTag* tag) {
 	this->load(tag);
+	if (this->level) {
+		this->level->setTileDirty(this->posX, this->posY, this->posZ);
+	}
 }

@@ -1,10 +1,22 @@
 #include <sound/MusicData.hpp>
+#include <ctime>
+
+static bool isWinterSeasonMusic() {
+	time_t now = time(nullptr);
+	struct tm* lt = localtime(&now);
+	if (!lt) return false;
+	int m = lt->tm_mon;
+	return (m == 11 || m == 0 || m == 1);
+}
+
 static const MusicTrack s_menuTracks[] = {
 	{"Moog City 2", music_moog_city_2_start, (size_t)(music_moog_city_2_end - music_moog_city_2_start)},
 	{"Door", music_door_start, (size_t)(music_door_end - music_door_start)},
 	{"Equinoxe", music_equinoxe_start, (size_t)(music_equinoxe_end - music_equinoxe_start)},
 	{"Key", music_key_start, (size_t)(music_key_end - music_key_start)},
-	{"Oxygene", music_oxygene_start, (size_t)(music_oxygene_end - music_oxygene_start)}
+	{"Oxygene", music_oxygene_start, (size_t)(music_oxygene_end - music_oxygene_start)},
+	{"Beginning", music_beginning_start, (size_t)(music_beginning_end - music_beginning_start)},
+	{"Flake", music_flake_start, (size_t)(music_flake_end - music_flake_start)}
 };
 static const MusicTrack s_gameTracks[] = {
 	{"Minecraft", music_minecraft_start, (size_t)(music_minecraft_end - music_minecraft_start)},
@@ -15,23 +27,29 @@ static const MusicTrack s_gameTracks[] = {
 	{"Mice on Venus", music_mice_on_venus_start, (size_t)(music_mice_on_venus_end - music_mice_on_venus_start)},
 	{"Key", music_key_start, (size_t)(music_key_end - music_key_start)},
 	{"Oxygene", music_oxygene_start, (size_t)(music_oxygene_end - music_oxygene_start)},
-	{"Equinoxe", music_equinoxe_start, (size_t)(music_equinoxe_end - music_equinoxe_start)}
+	{"Equinoxe", music_equinoxe_start, (size_t)(music_equinoxe_end - music_equinoxe_start)},
+	{"Beginning", music_beginning_start, (size_t)(music_beginning_end - music_beginning_start)},
+	{"Flake", music_flake_start, (size_t)(music_flake_end - music_flake_start)}
 };
 const MusicTrack& getMenuTrack(int index) {
-	if (index < 0 || index >= (int)(sizeof(s_menuTracks) / sizeof(s_menuTracks[0]))) {
+	int count = getMenuTrackCount();
+	if (index < 0 || index >= count) {
 		return s_menuTracks[0];
 	}
 	return s_menuTracks[index];
 }
 int getMenuTrackCount() {
-	return (int)(sizeof(s_menuTracks) / sizeof(s_menuTracks[0]));
+	int total = (int)(sizeof(s_menuTracks) / sizeof(s_menuTracks[0]));
+	return isWinterSeasonMusic() ? total : (total - 1);
 }
 const MusicTrack& getGameTrack(int index) {
-	if (index < 0 || index >= (int)(sizeof(s_gameTracks) / sizeof(s_gameTracks[0]))) {
+	int count = getGameTrackCount();
+	if (index < 0 || index >= count) {
 		return s_gameTracks[0];
 	}
 	return s_gameTracks[index];
 }
 int getGameTrackCount() {
-	return (int)(sizeof(s_gameTracks) / sizeof(s_gameTracks[0]));
+	int total = (int)(sizeof(s_gameTracks) / sizeof(s_gameTracks[0]));
+	return isWinterSeasonMusic() ? total : (total - 1);
 }

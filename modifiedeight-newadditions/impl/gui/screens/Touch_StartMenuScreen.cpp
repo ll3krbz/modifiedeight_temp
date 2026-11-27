@@ -593,7 +593,7 @@ void Touch::StartMenuScreen::init() {
   this->field_2C.emplace_back(&this->playButton);
   this->field_2C.emplace_back(&this->playOnRealmsButton);
   this->field_2C.emplace_back(this->settingsButtonMaybe);
-  this->field_138 = "\x0fMojang AB, ModifiedEight New Additions 1.8.0.1_build7 ";
+  this->field_138 = "\x0fMojang AB, ModifiedEight New Additions 1.8.0.1_build8 ";
   this->field_13C = Common::getGameVersionString();
   this->playOnRealmsButton.active = 0;
   this->playButton.active = 0;

@@ -17,7 +17,13 @@ static bool isAnyHalfSlabTile(int32_t id) {
 	        (Tile::dirtSlabHalf && id == Tile::dirtSlabHalf->blockID) ||
 	        (Tile::grassSlabHalf && id == Tile::grassSlabHalf->blockID) ||
 	        (Tile::rockSlabHalf && id == Tile::rockSlabHalf->blockID) ||
-	        (Tile::copperSlabHalf && id == Tile::copperSlabHalf->blockID));
+	        (Tile::copperSlabHalf && id == Tile::copperSlabHalf->blockID) ||
+	        (Tile::soulSandSlabHalf && id == Tile::soulSandSlabHalf->blockID) ||
+	        (Tile::glowLampSlabHalf && id == Tile::glowLampSlabHalf->blockID) ||
+	        (Tile::redstoneLampSlabHalf && id == Tile::redstoneLampSlabHalf->blockID) ||
+	        (Tile::redstoneLampSlabHalfOn && id == Tile::redstoneLampSlabHalfOn->blockID) ||
+	        (Tile::sandSlabHalf && id == Tile::sandSlabHalf->blockID) ||
+	        (Tile::gravelSlabHalf && id == Tile::gravelSlabHalf->blockID));
 }
 
 CustomSlabTile::Item::Item(int32_t id, Tile* tile, int32_t slabHalfId, int32_t slabFullId)
@@ -39,13 +45,13 @@ bool_t CustomSlabTile::Item::useOn(ItemInstance* a2, Player* a3, Level* a4, int3
 			bool combined = false;
 			if (te->mode == 0) {
 				if (te->bottomTileId == 0 && te->topTileId != 0) {
-					if (face == 0 || (face >= 2 && a10 <= 0.5f)) {
+					if (face == 0) {
 						te->bottomTileId = this->slabHalfId;
 						te->bottomAux = a2->getAuxValue() & 7;
 						combined = true;
 					}
 				} else if (te->topTileId == 0 && te->bottomTileId != 0) {
-					if (face == 1 || (face >= 2 && a10 > 0.5f)) {
+					if (face == 1) {
 						te->topTileId = this->slabHalfId;
 						te->topAux = a2->getAuxValue() & 7;
 						combined = true;
@@ -97,7 +103,6 @@ bool_t CustomSlabTile::Item::useOn(ItemInstance* a2, Player* a3, Level* a4, int3
 		bool canCombineSame = false;
 		if (face == 1 && !isUpper) canCombineSame = true;
 		else if (face == 0 && isUpper) canCombineSame = true;
-		else if (face >= 2 && ((a10 > 0.5f && !isUpper) || (a10 <= 0.5f && isUpper))) canCombineSame = true;
 
 		if (canCombineSame) {
 			AABB fullBox = {(float)x, (float)y, (float)z, (float)x + 1.0f, (float)y + 1.0f, (float)z + 1.0f};
@@ -108,9 +113,9 @@ bool_t CustomSlabTile::Item::useOn(ItemInstance* a2, Player* a3, Level* a4, int3
 						a4->playSound((float)x + 0.5f, (float)y + 0.5f, (float)z + 0.5f, fullTile->soundType->field_C, (float)(fullTile->soundType->field_0 + 1.0f) * 0.5f, fullTile->soundType->field_4 * 0.8f);
 					}
 					if (!a3->abilities.instabuild) --a2->count;
-					return 1;
 				}
 			}
+			return 1;
 		}
 	} else if (isAnyHalfSlabTile(id)) {
 		bool_t canCombine = 0;
@@ -125,16 +130,6 @@ bool_t CustomSlabTile::Item::useOn(ItemInstance* a2, Player* a3, Level* a4, int3
 			canCombine = 1;
 			bTileId = this->slabHalfId; bAux = a2->getAuxValue() & 7;
 			tTileId = id; tAux = meta & 7;
-		} else if (face >= 2) {
-			if (a10 > 0.5f && !isUpper) {
-				canCombine = 1;
-				bTileId = id; bAux = meta & 7;
-				tTileId = this->slabHalfId; tAux = a2->getAuxValue() & 7;
-			} else if (a10 <= 0.5f && isUpper) {
-				canCombine = 1;
-				bTileId = this->slabHalfId; bAux = a2->getAuxValue() & 7;
-				tTileId = id; tAux = meta & 7;
-			}
 		}
 
 		if (canCombine) {
@@ -155,9 +150,9 @@ bool_t CustomSlabTile::Item::useOn(ItemInstance* a2, Player* a3, Level* a4, int3
 						a4->playSound((float)x + 0.5f, (float)y + 0.5f, (float)z + 0.5f, fullTile->soundType->field_C, (float)(fullTile->soundType->field_0 + 1.0f) * 0.5f, fullTile->soundType->field_4 * 0.8f);
 					}
 					if (!a3->abilities.instabuild) --a2->count;
-					return 1;
 				}
 			}
+			return 1;
 		}
 	}
 

@@ -50,7 +50,8 @@ bool_t SignTileEntity::save(struct CompoundTag* a2) {
 }
 void SignTileEntity::setLevelAndPos(struct Level* level, int32_t x, int32_t y, int32_t z) {
 	TileEntity::setLevelAndPos(level, x, y, z);
-	if(level->getTile(x, y, z) != Tile::sign->blockID) {
+	int32_t id = level->getTile(x, y, z);
+	if((!level->isClientMaybe || id != 0) && id != Tile::sign->blockID && id != Tile::wallSign->blockID) {
 		this->setRemoved();
 	}
 }
@@ -62,7 +63,21 @@ Packet* SignTileEntity::getUpdatePacket() {
 }
 
 void SignTileEntity::onUpdatePacket(struct CompoundTag* a2) {
+	if(this->editable) {
+		std::string t1 = a2->getString("Text1");
+		std::string t2 = a2->getString("Text2");
+		std::string t3 = a2->getString("Text3");
+		std::string t4 = a2->getString("Text4");
+		if(t1.empty() && t2.empty() && t3.empty() && t4.empty()) {
+			if(!this->textLines[0].empty() || !this->textLines[1].empty() || !this->textLines[2].empty() || !this->textLines[3].empty()) {
+				return;
+			}
+		}
+	}
 	this->load(a2);
+	if(this->level) {
+		this->level->setTileDirty(this->posX, this->posY, this->posZ);
+	}
 }
 float SignTileEntity::getShadowRadius() {
 	if(this->getTile() == Tile::sign) return 0.2;

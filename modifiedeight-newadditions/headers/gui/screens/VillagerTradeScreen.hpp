@@ -3,6 +3,7 @@
 #include <entity/Villager.hpp>
 
 struct Player;
+struct NinePatchLayer;
 
 struct VillagerTradeScreen : Screen {
 	Player* player;
@@ -10,8 +11,18 @@ struct VillagerTradeScreen : Screen {
 	int32_t selectedTrade;
 	int32_t scrollOffset;
 	int32_t guiX, guiY;
+	int32_t dialogW, dialogH;
 	ItemInstance placedInputItem;
 	int32_t lastSourceSlot;
+	int32_t statusTimer;
+	std::string statusMessage;
+	uint32_t statusColor;
+	NinePatchLayer* bgPanel;
+	NinePatchLayer* insetPanel;
+	NinePatchLayer* btnNormal;
+	NinePatchLayer* btnPressed;
+	NinePatchLayer* slotNormal;
+	NinePatchLayer* slotSelected;
 
 	VillagerTradeScreen(Player* player, Villager* villager);
 

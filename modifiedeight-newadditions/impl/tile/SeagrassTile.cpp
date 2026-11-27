@@ -43,11 +43,12 @@ TextureUVCoordinateSet* SeagrassTile::getCarriedTexture(int32_t a2, int32_t a3) 
 
 bool_t SeagrassTile::canSurvive(Level* level, int32_t x, int32_t y, int32_t z) {
 	if (!level || y <= 0 || y >= LevelHeight::maxY()) return 0;
+	int32_t data = level->getData(x, y, z);
 	int32_t belowTile = level->getTile(x, y - 1, z);
-	if (belowTile == this->blockID) {
-		return 1;
+	if (data == 2) {
+		return belowTile == this->blockID && level->getData(x, y - 1, z) == 1;
 	}
-	if (belowTile == 0) return 0;
+	if (belowTile == 0 || belowTile == this->blockID) return 0;
 	if (belowTile == Tile::dirt->blockID || belowTile == Tile::grass->blockID ||
 	    belowTile == Tile::sand->blockID || belowTile == Tile::gravel->blockID ||
 	    belowTile == Tile::clay->blockID || belowTile == Tile::rock->blockID ||
@@ -64,12 +65,18 @@ bool_t SeagrassTile::mayPlace(Level* level, int32_t x, int32_t y, int32_t z) {
 	if (currentTile != Tile::water->blockID && currentTile != Tile::calmWater->blockID && (!curMat || curMat != Material::water)) {
 		return 0;
 	}
-	return this->canSurvive(level, x, y, z);
+	int32_t belowTile = level->getTile(x, y - 1, z);
+	if (belowTile == 0 || belowTile == this->blockID) return 0;
+	return belowTile == Tile::dirt->blockID || belowTile == Tile::grass->blockID ||
+	       belowTile == Tile::sand->blockID || belowTile == Tile::gravel->blockID ||
+	       belowTile == Tile::clay->blockID || belowTile == Tile::rock->blockID ||
+	       Tile::solid[belowTile];
 }
 
 void SeagrassTile::neighborChanged(Level* level, int32_t x, int32_t y, int32_t z, int32_t nx, int32_t ny, int32_t nz, int32_t fromTile) {
-	if (!this->canSurvive(level, x, y, z)) {
-		this->spawnResources(level, x, y, z, level->getData(x, y, z), 0.0f);
+	int32_t data = level->getData(x, y, z);
+	if (!this->canSurvive(level, x, y, z) || (data == 1 && ny == y + 1 && fromTile == this->blockID && level->getTile(x, y + 1, z) != this->blockID)) {
+		this->spawnResources(level, x, y, z, data, 0.0f);
 		level->setTileAndData(x, y, z, Tile::calmWater->blockID, 0, 3);
 	}
 }

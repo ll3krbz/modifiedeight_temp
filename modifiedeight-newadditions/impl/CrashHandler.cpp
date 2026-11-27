@@ -32,7 +32,7 @@ static void writeCrashReport(const char *sigName, void *addr) {
   ss << "====================================================\n";
   ss << "                    CRASH REPORT                    \n";
   ss << "====================================================\n";
-  ss << "Client Version: ModifiedEight New Additions 1.8.0.1_build7\n";
+  ss << "Client Version: ModifiedEight New Additions 1.8.0.1_build8\n";
   ss << "Time: " << timeBuf << "\n";
   ss << "Signal: " << sigName << "\n";
   if (addr) {

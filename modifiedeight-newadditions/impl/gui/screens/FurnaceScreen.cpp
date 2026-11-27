@@ -518,5 +518,22 @@ bool_t FurnaceScreen::isAllowed(int32_t a2) {
 	return 0;
 }
 std::vector<const ItemInstance*> FurnaceScreen::getItems(const Touch::InventoryPane* a2) {
-	return std::vector<const ItemInstance*>(this->field_1F0); //TODO check
+	std::vector<const ItemInstance*> out;
+	out.reserve(this->field_1E4.size());
+	if(this->field_1F0.size() != this->field_1E4.size()) this->field_1F0.resize(this->field_1E4.size(), 0);
+	for(size_t i = 0; i < this->field_1E4.size(); ++i){
+		int32_t invSlot = this->field_1E4[i];
+		ItemInstance* it = 0;
+		if(this->minecraft && this->minecraft->player && this->minecraft->player->inventory){
+			it = this->minecraft->player->inventory->getItem(invSlot);
+		}
+		if(it && !it->isNull()){
+			this->field_1F0[i] = it;
+			out.push_back(it);
+		}else{
+			this->field_1F0[i] = 0;
+			out.push_back(0);
+		}
+	}
+	return out;
 }

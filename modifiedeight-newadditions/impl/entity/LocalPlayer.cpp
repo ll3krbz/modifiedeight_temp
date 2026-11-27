@@ -506,7 +506,7 @@ void LocalPlayer::ride(Entity *a2) {
     this->minecraft->rakNetInstance->send(v9);
   }
 }
-bool_t LocalPlayer::isSneaking() { return this->moveInput->sneakingMaybe; }
+bool_t LocalPlayer::isSneaking() { return this->moveInput ? this->moveInput->sneakingMaybe : 0; }
 void LocalPlayer::causeFallDamage(float a2) {
   int32_t v4; // r6
 
@@ -568,6 +568,11 @@ void LocalPlayer::aiStep() {
   --this->field_D88;
   minecraft = this->minecraft;
   moveInput = this->moveInput;
+  if (!moveInput) {
+    Mob::aiStep();
+    Player::aiStep();
+    return;
+  }
   currentScreen = minecraft->currentScreen;
   jumpingMaybe = moveInput->jumpingMaybe;
   if (!currentScreen || currentScreen->field_C) {
@@ -635,6 +640,7 @@ void LocalPlayer::updateAi() {
   bool_t v3; // r3
 
   Player::updateAi();
+  if (!this->moveInput) return;
   this->moveStrafe = this->moveInput->strafeInput;
   this->moveForward = this->moveInput->forwardInput;
   if (moveInput->jumpingMaybe) {

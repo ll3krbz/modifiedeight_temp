@@ -11,7 +11,14 @@ static bool isAnyHalfSlabTile(int32_t id) {
 	        id == Tile::woodSlabHalf->blockID ||
 	        (Tile::dirtSlabHalf && id == Tile::dirtSlabHalf->blockID) ||
 	        (Tile::grassSlabHalf && id == Tile::grassSlabHalf->blockID) ||
-	        (Tile::rockSlabHalf && id == Tile::rockSlabHalf->blockID));
+	        (Tile::rockSlabHalf && id == Tile::rockSlabHalf->blockID) ||
+	        (Tile::copperSlabHalf && id == Tile::copperSlabHalf->blockID) ||
+	        (Tile::soulSandSlabHalf && id == Tile::soulSandSlabHalf->blockID) ||
+	        (Tile::glowLampSlabHalf && id == Tile::glowLampSlabHalf->blockID) ||
+	        (Tile::redstoneLampSlabHalf && id == Tile::redstoneLampSlabHalf->blockID) ||
+	        (Tile::redstoneLampSlabHalfOn && id == Tile::redstoneLampSlabHalfOn->blockID) ||
+	        (Tile::sandSlabHalf && id == Tile::sandSlabHalf->blockID) ||
+	        (Tile::gravelSlabHalf && id == Tile::gravelSlabHalf->blockID));
 }
 
 StoneSlabTileItem::StoneSlabTileItem(int32_t id) : TileItem(id){
@@ -37,13 +44,13 @@ bool_t StoneSlabTileItem::useOn(ItemInstance* item, Player* player, Level* level
 			bool combined = false;
 			if (te->mode == 0) {
 				if (te->bottomTileId == 0 && te->topTileId != 0) {
-					if (face == 0 || (face >= 2 && faceY <= 0.5f)) {
+					if (face == 0) {
 						te->bottomTileId = Tile::stoneSlabHalf->blockID;
 						te->bottomAux = item->getAuxValue() & 7;
 						combined = true;
 					}
 				} else if (te->topTileId == 0 && te->bottomTileId != 0) {
-					if (face == 1 || (face >= 2 && faceY > 0.5f)) {
+					if (face == 1) {
 						te->topTileId = Tile::stoneSlabHalf->blockID;
 						te->topAux = item->getAuxValue() & 7;
 						combined = true;
@@ -101,22 +108,17 @@ bool_t StoneSlabTileItem::useOn(ItemInstance* item, Player* player, Level* level
 			canCombine = 1;
 			bTileId = Tile::stoneSlabHalf->blockID; bAux = item->getAuxValue() & 7;
 			tTileId = id; tAux = meta & 7;
-		} else if (face >= 2) {
-			if (faceY > 0.5f && !isUpper) {
-				canCombine = 1;
-				bTileId = id; bAux = meta & 7;
-				tTileId = Tile::stoneSlabHalf->blockID; tAux = item->getAuxValue() & 7;
-			} else if (faceY <= 0.5f && isUpper) {
-				canCombine = 1;
-				bTileId = Tile::stoneSlabHalf->blockID; bAux = item->getAuxValue() & 7;
-				tTileId = id; tAux = meta & 7;
-			}
 		}
 
 		if (canCombine) {
 			AABB fullBox = {(float)x, (float)y, (float)z, (float)x + 1.0f, (float)y + 1.0f, (float)z + 1.0f};
 			if (level->isUnobstructed(fullBox)) {
-				if (level->setTileAndData(x, y, z, Tile::mixedSlab->blockID, 0, 3)) {
+				if (bTileId == Tile::stoneSlabHalf->blockID && tTileId == Tile::stoneSlabHalf->blockID && bAux == tAux) {
+					if (level->setTileAndData(x, y, z, Tile::stoneSlab->blockID, bAux, 3)) {
+						level->playSound((float)x + 0.5f, (float)y + 0.5f, (float)z + 0.5f, Tile::stoneSlab->soundType->field_C, (float)(Tile::stoneSlab->soundType->field_0 + 1.0f) * 0.5f, Tile::stoneSlab->soundType->field_4 * 0.8f);
+						--item->count;
+					}
+				} else if (level->setTileAndData(x, y, z, Tile::mixedSlab->blockID, 0, 3)) {
 					MixedSlabTileEntity* te = (MixedSlabTileEntity*)level->getTileEntity(x, y, z);
 					if (te) {
 						te->mode = 0;

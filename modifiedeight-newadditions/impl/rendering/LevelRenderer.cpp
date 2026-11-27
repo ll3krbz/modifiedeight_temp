@@ -1828,6 +1828,10 @@ void LevelRenderer::renderRainSnow(float partialTicks) {
         int topY = this->level->getHeightmap(x, z);
         if (topY <= 0)
           topY = 64;
+        if(!this->level->canSeeSky(x, topY + 1, z)){
+          while(topY < ipy + radius && topY < 127 && !this->level->canSeeSky(x, topY + 1, z)) ++topY;
+          if(!this->level->canSeeSky(x, topY + 1, z)) continue;
+        }
         int minY = ipy - radius;
         int maxY = ipy + radius;
         if (minY < topY)

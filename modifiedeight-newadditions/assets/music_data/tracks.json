@@ -42,5 +42,13 @@
   {
     "name": "Moog City 2",
     "file": "music/moog_city_2.aac"
+  },
+  {
+    "name": "Beginning",
+    "file": "music/beginning.aac"
+  },
+  {
+    "name": "Flake",
+    "file": "music/flake.aac"
   }
 ]

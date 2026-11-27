@@ -100,7 +100,7 @@ void StartMenuScreen::init() {
   this->field_2C.emplace_back(&this->joinGameButton);
   this->buttons.emplace_back(&this->optionsButton);
   this->field_2C.emplace_back(&this->optionsButton);
-  this->mojangABMaybe = "\xFFMojang AB, ModifiedEight Classic 1.8.0_build7 ";
+  this->mojangABMaybe = "\xFFMojang AB, ModifiedEight Classic 1.8.0_build8 ";
   this->gameVersion = Common::getGameVersionString();
   this->optionsButton.active = 0;
   this->startGameButton.active = 0;

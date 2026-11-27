@@ -3,6 +3,20 @@
 #include <gui/Screen.hpp>
 #include <stdlib.h>
 #include <string.h>
+#include <random>
+#include <chrono>
+
+static int getRandomInt(int maxExclusive) {
+	if (maxExclusive <= 1) return 0;
+	static std::mt19937 s_rng([]() {
+		std::random_device rd;
+		auto now = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+		std::seed_seq seq{rd(), rd(), (unsigned int)(now & 0xFFFFFFFF), (unsigned int)((now >> 32) & 0xFFFFFFFF)};
+		return std::mt19937(seq);
+	}());
+	std::uniform_int_distribution<int> dist(0, maxExclusive - 1);
+	return dist(s_rng);
+}
 
 #if HAS_OPENSLES
 #include <sound/SoundSystemSL.hpp>
@@ -423,9 +437,9 @@ void MusicEngine::startRandomTrack(int32_t mode) {
 	if (mode == MUSIC_MODE_MENU) {
 		int count = getMenuTrackCount();
 		if (count <= 0) return;
-		int idx = rand() % count;
+		int idx = getRandomInt(count);
 		if (count > 1 && idx == this->lastPlayedMenuIndex) {
-			idx = (idx + 1) % count;
+			idx = (idx + 1 + getRandomInt(count - 1)) % count;
 		}
 		this->lastPlayedMenuIndex = idx;
 		this->currentMode = MUSIC_MODE_MENU;
@@ -433,9 +447,9 @@ void MusicEngine::startRandomTrack(int32_t mode) {
 	} else if (mode == MUSIC_MODE_GAME) {
 		int count = getGameTrackCount();
 		if (count <= 0) return;
-		int idx = rand() % count;
+		int idx = getRandomInt(count);
 		if (count > 1 && idx == this->lastPlayedGameIndex) {
-			idx = (idx + 1) % count;
+			idx = (idx + 1 + getRandomInt(count - 1)) % count;
 		}
 		this->lastPlayedGameIndex = idx;
 		this->currentMode = MUSIC_MODE_GAME;
@@ -604,6 +618,7 @@ void MusicEngine::update(Minecraft* mc) {
 
 	if (this->isPlaying && this->currentMode != neededMode) {
 		this->stop();
+		this->pauseSeconds = 0.0f;
 	}
 
 	if (this->isPlaying) {
@@ -612,7 +627,7 @@ void MusicEngine::update(Minecraft* mc) {
 		this->pauseSeconds -= dt;
 		if (this->pauseSeconds <= 0.0f) {
 			this->startRandomTrack(neededMode);
-			this->pauseSeconds = 20.0f + (float)(rand() % 40);
+			this->pauseSeconds = 20.0f + (float)getRandomInt(40);
 		}
 	}
 }

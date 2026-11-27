@@ -74,6 +74,7 @@ bool g_isNewAdditionsServer = false;
 #include <network/packet/UpdateBlockPacket.hpp>
 #include <stdlib.h>
 #include <tile/Tile.hpp>
+#include <tile/EntityTile.hpp>
 #include <tile/entity/FurnaceTileEntity.hpp>
 #include <tile/entity/TileEntity.hpp>
 #include <util/_ChunkSorter.hpp>
@@ -175,8 +176,72 @@ void ClientSideNetworkHandler::levelGenerated(Level* a2) {
 }
 ClientSideNetworkHandler::~ClientSideNetworkHandler() {
 }
+struct PendingEntityDataEntry {
+	int32_t x, y, z;
+	CompoundTag data;
+};
+static std::vector<PendingEntityDataEntry> s_pendingEntityData;
+
+static void applyPendingEntityDataAt(MultiPlayerLevel* level, int32_t x, int32_t y, int32_t z) {
+	if(!level || s_pendingEntityData.empty()) return;
+	for(size_t i = 0; i < s_pendingEntityData.size(); ) {
+		if(s_pendingEntityData[i].x == x && s_pendingEntityData[i].y == y && s_pendingEntityData[i].z == z) {
+			int32_t id = level->getTile(x, y, z);
+			if(id > 0 && id < 256 && Tile::tiles[id] && Tile::isEntityTile[id]) {
+				TileEntity* te = level->getTileEntity(x, y, z);
+				if(!te) {
+					te = ((EntityTile*)Tile::tiles[id])->newTileEntity();
+					if(te) {
+						level->setTileEntity(x, y, z, te);
+					}
+				}
+				if(te) {
+					te->onUpdatePacket(&s_pendingEntityData[i].data);
+					level->setTileDirty(x, y, z);
+				}
+				s_pendingEntityData.erase(s_pendingEntityData.begin() + i);
+				continue;
+			}
+		}
+		++i;
+	}
+}
+
+static void applyPendingEntityDataInChunk(MultiPlayerLevel* level, int32_t chunkX, int32_t chunkZ) {
+	if(!level || s_pendingEntityData.empty()) return;
+	int32_t minX = chunkX * 16;
+	int32_t maxX = minX + 15;
+	int32_t minZ = chunkZ * 16;
+	int32_t maxZ = minZ + 15;
+	for(size_t i = 0; i < s_pendingEntityData.size(); ) {
+		int32_t x = s_pendingEntityData[i].x;
+		int32_t y = s_pendingEntityData[i].y;
+		int32_t z = s_pendingEntityData[i].z;
+		if(x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+			int32_t id = level->getTile(x, y, z);
+			if(id > 0 && id < 256 && Tile::tiles[id] && Tile::isEntityTile[id]) {
+				TileEntity* te = level->getTileEntity(x, y, z);
+				if(!te) {
+					te = ((EntityTile*)Tile::tiles[id])->newTileEntity();
+					if(te) {
+						level->setTileEntity(x, y, z, te);
+					}
+				}
+				if(te) {
+					te->onUpdatePacket(&s_pendingEntityData[i].data);
+					level->setTileDirty(x, y, z);
+				}
+				s_pendingEntityData.erase(s_pendingEntityData.begin() + i);
+				continue;
+			}
+		}
+		++i;
+	}
+}
+
 void ClientSideNetworkHandler::onConnect(const RakNet::RakNetGUID& a2) {
 	g_isNewAdditionsServer = false;
+	s_pendingEntityData.clear();
 	a2.ToString();
 	this->rakPeer->GetMyGUID().ToString();
 	this->field_18 = a2;
@@ -191,6 +256,7 @@ void ClientSideNetworkHandler::onUnableToConnect() {
 
 void ClientSideNetworkHandler::onDisconnect(const RakNet::RakNetGUID& a2) {
 	g_isNewAdditionsServer = false;
+	s_pendingEntityData.clear();
 	if(this->level) {
 		this->level->isClientMaybe = 0;
 		int v5 = this->level->playersMaybe.size() - 1;
@@ -451,6 +517,7 @@ void ClientSideNetworkHandler::handle(const RakNet::RakNetGUID&, struct UpdateBl
 		if(this->isChunkLoaded(x >> 4, z >> 4)) {
 			int y = (uint8_t)a3->y;
 			this->level->setTileAndData(x, y, z, Tile::transformToValidBlockId(a3->id, x, y, z), a3->meta, 3);
+			applyPendingEntityDataAt(this->level, x, y, z);
 		} else {
 			this->field_28.emplace_back(SBufferedBlockUpdate{x, z, a3->y, a3->id, a3->meta, 1});
 		}
@@ -573,6 +640,7 @@ void ClientSideNetworkHandler::handle(const RakNet::RakNetGUID&, struct ChunkDat
 				if(v31) {
 					this->level->setTilesDirty(16 * pk->xPos + v35, minY, 16 * pk->zPos + v29, 16 * pk->xPos + v36, maxY, 16 * pk->zPos + v37);
 				}
+				applyPendingEntityDataInChunk(this->level, pk->xPos, pk->zPos);
 
 				chunk->unsaved = 0;
 				if((uint32_t)pk->xPos <= 0xF && pk->zPos >= 0 && pk->zPos <= 15) {
@@ -589,6 +657,7 @@ void ClientSideNetworkHandler::handle(const RakNet::RakNetGUID&, struct ChunkDat
 						} else {
 							this->level->setTile(v25->x, v25->y, v25->z, v26, 3);
 						}
+						applyPendingEntityDataAt(this->level, v25->x, (uint8_t)v25->y, v25->z);
 					}
 					this->field_28.clear();
 				} else {
@@ -944,8 +1013,29 @@ void ClientSideNetworkHandler::handle(const RakNet::RakNetGUID& a2, struct Anima
 void ClientSideNetworkHandler::handle(const RakNet::RakNetGUID&, struct EntityDataPacket* a3) {
 	if(this->level) {
 		TileEntity* te = this->level->getTileEntity(a3->x, a3->y, a3->z);
+		if(!te) {
+			int32_t id = this->level->getTile(a3->x, a3->y, a3->z);
+			if(id > 0 && id < 256 && Tile::tiles[id] && Tile::isEntityTile[id]) {
+				te = ((EntityTile*)Tile::tiles[id])->newTileEntity();
+				if(te) {
+					this->level->setTileEntity(a3->x, a3->y, a3->z, te);
+				}
+			}
+		}
 		if(te) {
 			te->onUpdatePacket(&a3->data);
+			this->level->setTileDirty(a3->x, a3->y, a3->z);
+		} else {
+			for(size_t i = 0; i < s_pendingEntityData.size(); ++i) {
+				if(s_pendingEntityData[i].x == a3->x && s_pendingEntityData[i].y == a3->y && s_pendingEntityData[i].z == a3->z) {
+					s_pendingEntityData[i].data = a3->data;
+					return;
+				}
+			}
+			if(s_pendingEntityData.size() > 2048) {
+				s_pendingEntityData.erase(s_pendingEntityData.begin());
+			}
+			s_pendingEntityData.push_back(PendingEntityDataEntry{a3->x, a3->y, a3->z, a3->data});
 		}
 	}
 }

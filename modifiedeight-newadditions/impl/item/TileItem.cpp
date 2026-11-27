@@ -28,13 +28,13 @@ bool_t TileItem::useOn(ItemInstance* item, Player* player, Level* level, int32_t
 				bool combined = false;
 				if (te->mode == 0) {
 					if (te->bottomTileId == 0 && te->topTileId != 0) {
-						if (side == 0 || (side >= 2 && faceY <= 0.5f)) {
+						if (side == 0) {
 							te->bottomTileId = this->blockID;
 							te->bottomAux = item->getAuxValue();
 							combined = true;
 						}
 					} else if (te->topTileId == 0 && te->bottomTileId != 0) {
-						if (side == 1 || (side >= 2 && faceY > 0.5f)) {
+						if (side == 1) {
 							te->topTileId = this->blockID;
 							te->topAux = item->getAuxValue();
 							combined = true;
@@ -203,6 +203,67 @@ bool_t TileItem::useOn(ItemInstance* item, Player* player, Level* level, int32_t
 	}
 
 	int32_t destTileId = level->getTile(x, yNew, zNew);
+	if (thisTile && dynamic_cast<SlabTile*>(thisTile) && !((SlabTile*)thisTile)->isFull && Tile::mixedSlab && this->blockID != Tile::mixedSlab->blockID && !dynamic_cast<TrapDoorTile*>(thisTile) && !thisTile->isLiquidTile() && item && item->count > 0) {
+		bool placingTop = (side == 0 || (side >= 2 && faceY > 0.5f));
+		if (destTileId == Tile::mixedSlab->blockID) {
+			MixedSlabTileEntity* te = (MixedSlabTileEntity*)level->getTileEntity(x, yNew, zNew);
+			if (te && te->mode == 0) {
+				if (placingTop && te->bottomTileId != 0 && te->topTileId == 0) {
+					AABB fullBox = {(float)x, (float)yNew, (float)zNew, (float)x + 1.0f, (float)yNew + 1.0f, (float)zNew + 1.0f};
+					if (level->isUnobstructed(fullBox)) {
+						te->topTileId = this->blockID;
+						te->topAux = item->getAuxValue() & 7;
+						level->sendTileUpdated(x, yNew, zNew);
+						if (thisTile->soundType) {
+							level->playSound((float)x + 0.5f, (float)yNew + 0.5f, (float)zNew + 0.5f, thisTile->soundType->field_C, (float)(thisTile->soundType->field_0 + 1.0f) * 0.5f, thisTile->soundType->field_4 * 0.8f);
+						}
+						if (!player || !player->abilities.instabuild) --item->count;
+					}
+					return 1;
+				} else if (!placingTop && te->bottomTileId == 0 && te->topTileId != 0) {
+					AABB fullBox = {(float)x, (float)yNew, (float)zNew, (float)x + 1.0f, (float)yNew + 1.0f, (float)zNew + 1.0f};
+					if (level->isUnobstructed(fullBox)) {
+						te->bottomTileId = this->blockID;
+						te->bottomAux = item->getAuxValue() & 7;
+						level->sendTileUpdated(x, yNew, zNew);
+						if (thisTile->soundType) {
+							level->playSound((float)x + 0.5f, (float)yNew + 0.5f, (float)zNew + 0.5f, thisTile->soundType->field_C, (float)(thisTile->soundType->field_0 + 1.0f) * 0.5f, thisTile->soundType->field_4 * 0.8f);
+						}
+						if (!player || !player->abilities.instabuild) --item->count;
+					}
+					return 1;
+				}
+			}
+		} else if (destTileId > 0 && destTileId < 256 && Tile::tiles[destTileId] && dynamic_cast<SlabTile*>(Tile::tiles[destTileId]) && !((SlabTile*)Tile::tiles[destTileId])->isFull && !dynamic_cast<TrapDoorTile*>(Tile::tiles[destTileId])) {
+			int32_t destMeta = level->getData(x, yNew, zNew);
+			bool destIsTop = ((destMeta >> 3) & 1) != 0;
+			if (placingTop != destIsTop) {
+				AABB fullBox = {(float)x, (float)yNew, (float)zNew, (float)x + 1.0f, (float)yNew + 1.0f, (float)zNew + 1.0f};
+				if (level->isUnobstructed(fullBox)) {
+					int32_t bId = destIsTop ? this->blockID : destTileId;
+					int32_t bAux = destIsTop ? (item->getAuxValue() & 7) : (destMeta & 7);
+					int32_t tId = destIsTop ? destTileId : this->blockID;
+					int32_t tAux = destIsTop ? (destMeta & 7) : (item->getAuxValue() & 7);
+					if (level->setTileAndData(x, yNew, zNew, Tile::mixedSlab->blockID, 0, 3)) {
+						MixedSlabTileEntity* te = (MixedSlabTileEntity*)level->getTileEntity(x, yNew, zNew);
+						if (te) {
+							te->mode = 0;
+							te->bottomTileId = bId;
+							te->bottomAux = bAux;
+							te->topTileId = tId;
+							te->topAux = tAux;
+						}
+						level->sendTileUpdated(x, yNew, zNew);
+						if (thisTile->soundType) {
+							level->playSound((float)x + 0.5f, (float)yNew + 0.5f, (float)zNew + 0.5f, thisTile->soundType->field_C, (float)(thisTile->soundType->field_0 + 1.0f) * 0.5f, thisTile->soundType->field_4 * 0.8f);
+						}
+						if (!player || !player->abilities.instabuild) --item->count;
+					}
+				}
+				return 1;
+			}
+		}
+	}
 	if (destTileId == this->blockID && (this->blockID == 37 || this->blockID == 38 || this->blockID == 39 || this->blockID == 40 || this->blockID == 191 || this->blockID == 192 || this->blockID == 239 || this->blockID == 240 || this->blockID == 241 || this->blockID == 242)) {
 		int32_t curData = level->getData(x, yNew, zNew);
 		if ((curData & 3) < 3) {

@@ -59,6 +59,16 @@
 .globl music_equinoxe_end
 .globl _music_equinoxe_end
 
+.globl music_beginning_start
+.globl _music_beginning_start
+.globl music_beginning_end
+.globl _music_beginning_end
+
+.globl music_flake_start
+.globl _music_flake_start
+.globl music_flake_end
+.globl _music_flake_end
+
 music_danny_start:
 _music_danny_start:
 .incbin "assets/music/danny.aac"
@@ -124,3 +134,15 @@ _music_equinoxe_start:
 .incbin "assets/music/equinoxe.aac"
 music_equinoxe_end:
 _music_equinoxe_end:
+
+music_beginning_start:
+_music_beginning_start:
+.incbin "assets/music/beginning.aac"
+music_beginning_end:
+_music_beginning_end:
+
+music_flake_start:
+_music_flake_start:
+.incbin "assets/music/flake.aac"
+music_flake_end:
+_music_flake_end:
